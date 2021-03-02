@@ -1,9 +1,7 @@
 package com.show.livedataktx
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.*
 
 
 fun <T> LiveData<T>.filter(predicate: (T) -> Boolean): MediatorLiveData<T> {
@@ -55,4 +53,18 @@ fun <T> LiveData<T>.debounce(timeout: Long): MediatorLiveData<T> {
     }
     return source
 }
+
+fun <T> LiveData<T>.observeForever(owner:LifecycleOwner,observer: Observer<T>){
+    val lifeCallBack = object : LifecycleObserver {
+        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        fun onDestroy() {
+            removeObservers(owner)
+            removeObserver(observer)
+            owner.lifecycle.removeObserver(this)
+        }
+    }
+    owner.lifecycle.addObserver(lifeCallBack)
+    this.observeForever(observer)
+}
+
 
